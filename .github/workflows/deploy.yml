@@ -1,40 +1,44 @@
-name: React CI/CD
+name: React App CI/CD
 
 on:
   push:
     branches:
-      - main  # or your deployment branch
+      - main  # change to your active branch
+
+env:
+  IMAGE_NAME: bytesbuddy/ecommerce
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          repository: MUSTAKIMSHAIKH2942/reactecomtestCICD
 
-      - name: Install dependencies
-        run: npm install
-        working-directory: ./reactcicd/gitcloneapp/reactecomtestCICD
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build React app
-        run: npm run build
-        working-directory: ./reactcicd/gitcloneapp/reactecomtestCICD
-
-      # Optional Docker Image Build and Push
-      - name: Log in to Docker Hub
+      - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image
+      - name: Build Docker Image
+        run: docker build -t $IMAGE_NAME .
+
+      - name: Push Docker Image to Docker Hub
+        run: docker push $IMAGE_NAME
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Deploy to Kubernetes
         run: |
-          docker build -t yourdockerhub/reactcicd-app:latest .
-          docker push yourdockerhub/reactcicd-app:latest
-        working-directory: ./reactcicd/gitcloneapp/reactecomtestCICD
+          kubectl apply -f react-deployment.yaml
+          kubectl apply -f react-service.yaml
