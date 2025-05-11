@@ -2,20 +2,20 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'your-dockerhub-username/react-cicd-app'
+        IMAGE_NAME = 'bytesbuddy/ecommerce'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Clone Code') {
             steps {
-                git 'https://github.com/your-username/react-cicd-app.git'
+                git 'https://github.com/MUSTAKIMSHAIKH2942/reactecomtestCICD.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t $DOCKER_IMAGE ."
+                    sh 'docker build -t $IMAGE_NAME .'
                 }
             }
         }
@@ -24,7 +24,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry([credentialsId: 'dockerhub-creds', url: '']) {
-                        sh "docker push $DOCKER_IMAGE"
+                        sh 'docker push $IMAGE_NAME'
                     }
                 }
             }
@@ -33,8 +33,8 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    sh "kubectl apply -f react-deployment.yaml"
-                    sh "kubectl apply -f react-service.yaml"
+                    sh 'kubectl apply -f react-deployment.yaml'
+                    sh 'kubectl apply -f react-service.yaml'
                 }
             }
         }
